@@ -1,7 +1,16 @@
 
 # Python CCTV
 
-The goal of this project is, to be able to use any old PC as a CCTV Station.
+The goal of this project is, to be able to use any old PC as a CCTV Station. There are two sides to this, a 'server' and a 'client.
+
+## Server
+
+The Server's goal is to receive all of the Client's video streams and show them in one simple Webinterface. The User should also be able to save them.
+Motion Detection is also planned, but might be a bit difficult to implement.
+
+## Client
+
+The Client's goal is to send the video stream to the Server. It should also be able to detect movement and send a notification to the Server.
 
     
 ## Run Locally

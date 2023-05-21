@@ -2,6 +2,10 @@ import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import socket
+from matplotlib import pyplot as plt
+import cv2
+import numpy as np
+
 
 hostname = "0.0.0.0"
 webServerPort = 8080
@@ -27,10 +31,11 @@ class httpServer(BaseHTTPRequestHandler):
     def update_title(cls, connected):
         if connected:
             cls.html_content = cls.html_content.replace("Home CCTV (0/1)", "Home CCTV (1/1)")
-            cls.html_content = cls.html_content.replace("No Cameras detected!", "Camera 1:")
+            cls.html_content = cls.html_content.replace("No Cameras detected!", "Camera 1: ")
+
         else:
             cls.html_content = cls.html_content.replace("Home CCTV (1/1)", "Home CCTV (0/1)")
-            cls.html_content = cls.html_content.replace("Camera 1:", "No Cameras detected!")
+            cls.html_content = cls.html_content.replace("Camera 1: ", "No Cameras detected!")
 
 def run_http_server():
     webServer = HTTPServer((hostname, webServerPort), httpServer)
@@ -55,10 +60,10 @@ def run_socket_server():
             httpServer.update_title(httpServer.connected)  # Update the title when connected
             while True:
                 data = conn.recv(1024)
+                print(data)
                 if not data:
                     break
                 # Update HTML content dynamically when the client connects
-                conn.sendall(data)
             httpServer.connected = False  # Update the connection status
             httpServer.update_title(httpServer.connected)  # Update the title when disconnected
 if arg == "server":
@@ -85,7 +90,13 @@ elif arg == "client":
                 connected = True
                 print(f"Connected to {webServerHost}:{serverPort}")
                 while True:
-                    pass
+                    cap = cv2.VideoCapture(1)
+                    ret, frame = cap.read()
+                    while cap.isOpened():
+                        ret, frame = cap.read()
+                        s.sendall(frame)
+                    cap.release()
+                    pass        
 
         except ConnectionRefusedError:
             print(f"Failed to connect to {webServerHost}:{serverPort}.")

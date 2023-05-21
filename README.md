@@ -3,32 +3,49 @@
 
 The goal of this project is, to be able to use any old PC as a CCTV Station.
 
+    
+## Run Locally
 
-## Installation
-
-Install my-project with npm
+Clone the project
 
 ```bash
-  pip install -m requirements.txt
+  git clone https://github.com/SpyTVofficial/pythoncctv.git
 ```
 
-    
-## Roadmap
+Go to the project directory
 
-- Central Management Place
-- Public Webinterface for on-the-go Checking
+```bash
+  cd pythoncctv
+```
 
+Install dependencies
 
-## Deployment
+```bash
+  pip install -r requirements.txt
+```
 
-To deploy the Server
+Start the Server
 
 ```bash
   py cctv.py server
 ```
 
-To deploy the Client
-
+Start the Client
 ```bash
-  py cctv.py client
+  py cctv client
+``` 
+And enter the IP-Adress of the Server
+```bash
+  Enter IP address (press Enter for default): 
 ```
+## Todo
+
+- HTTP Login
+- Showing Video Stream on Webserver
+- Saving Video Stream
+- Movement Detection
+
+## Roadmap
+
+- Central Management Place
+

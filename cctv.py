@@ -65,6 +65,7 @@ def run_socket_server():
                 # Update HTML content dynamically when the client connects
             httpServer.connected = False  # Update the connection status
             httpServer.update_title(httpServer.connected)  # Update the title when disconnected
+            print("Client disconnected.")
 
 if arg == "server":
     print("Starting CCTV Server!")
@@ -74,6 +75,8 @@ if arg == "server":
     socket_thread.start()
     http_thread.join()
     socket_thread.join()
+
+
 elif arg == "client":
     print("Starting CCTV Client!")
     connected = False

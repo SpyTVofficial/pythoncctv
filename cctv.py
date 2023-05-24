@@ -33,10 +33,10 @@ class httpServer(BaseHTTPRequestHandler):
     def update_title(cls, connected):
         if connected:
             cls.html_content = cls.html_content.replace("Home CCTV (0/1)", "Home CCTV (1/1)")
-            cls.html_content = cls.html_content.replace("No Cameras detected!", "Camera 1: <iframe src=\"{addr}:5000/>")
+            cls.html_content = cls.html_content.replace("No Cameras detected!", "Camera 1: <img style=\"display: block; \" src=\"http://127.0.0.1:5000/video_feed\">")
         else:
             cls.html_content = cls.html_content.replace("Home CCTV (1/1)", "Home CCTV (0/1)")
-            cls.html_content = cls.html_content.replace("Camera 1: ", "No Cameras detected!")
+            cls.html_content = cls.html_content.replace("Camera 1: <img style=\"display: block; \" src=\"http://127.0.0.1:5000/video_feed\">", "No Cameras detected!")
 
     @classmethod
     def set_latest_frame(cls, frame):

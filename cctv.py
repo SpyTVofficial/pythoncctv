@@ -5,13 +5,12 @@ from flask import Flask, render_template, Response
 import socket
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 
 
 hostname = "0.0.0.0"
 webServerPort = 8080
 serverPort = 42069
-camera = cv2.VideoCapture(0)
-app = Flask(__name__)
 
 arg = sys.argv[1]
 
@@ -33,10 +32,10 @@ class httpServer(BaseHTTPRequestHandler):
     def update_title(cls, connected):
         if connected:
             cls.html_content = cls.html_content.replace("Home CCTV (0/1)", "Home CCTV (1/1)")
-            cls.html_content = cls.html_content.replace("No Cameras detected!", "Camera 1: <img style=\"display: block; \" src=\"http://127.0.0.1:5000/video_feed\">")
+            cls.html_content = cls.html_content.replace("No Cameras detected!", "Camera 1: <img style=\"display: block; \" src=\"http://10.0.0.50:5000/video_feed\">")
         else:
             cls.html_content = cls.html_content.replace("Home CCTV (1/1)", "Home CCTV (0/1)")
-            cls.html_content = cls.html_content.replace("Camera 1: <img style=\"display: block; \" src=\"http://127.0.0.1:5000/video_feed\">", "No Cameras detected!")
+            cls.html_content = cls.html_content.replace("Camera 1: <img style=\"display: block; \" src=\"http://10.0.0.50:5000/video_feed\">", "No Cameras detected!")
 
     @classmethod
     def set_latest_frame(cls, frame):
@@ -78,14 +77,6 @@ def run_socket_server():
             httpServer.update_title(httpServer.connected)  # Update the title when disconnected
             print("Client disconnected.")
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
 def gen_frames():  
     while True:
         success, frame = camera.read()  # read the camera frame
@@ -107,6 +98,18 @@ if arg == "server":
     socket_thread.join()
 
 elif arg == "client":
+
+    camera = cv2.VideoCapture(1)
+    app = Flask(__name__)
+
+    @app.route('/')
+    def index():
+        return render_template('index.html')
+
+    @app.route('/video_feed')
+    def video_feed():
+        return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
     print("Starting CCTV Client!")
     connected = False
     while not connected:
@@ -121,7 +124,7 @@ elif arg == "client":
                 connected = True
                 print(f"Connected to {webServerHost}:{serverPort}")
                 while True:
-                    app.run(debug=False)
+                    app.run(debug=False, host='0.0.0.0', port=5000)
 #                    while cap.isOpened():
 #                        ret, frame = cap.read()
 #                        if ret:

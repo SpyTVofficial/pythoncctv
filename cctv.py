@@ -1,8 +1,8 @@
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from flask import Flask, render_template, Response
 import socket
-from matplotlib import pyplot as plt
 import cv2
 import numpy as np
 
@@ -10,6 +10,8 @@ import numpy as np
 hostname = "0.0.0.0"
 webServerPort = 8080
 serverPort = 42069
+camera = cv2.VideoCapture(0)
+app = Flask(__name__)
 
 arg = sys.argv[1]
 
@@ -21,7 +23,7 @@ class httpServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        self.wfile.write(bytes(self.html_content, "utf-8"))
+        self.wfile.write(bytes(httpServer.html_content, "utf-8"))
 
     @classmethod
     def update_html_content(cls, new_content):
@@ -31,11 +33,18 @@ class httpServer(BaseHTTPRequestHandler):
     def update_title(cls, connected):
         if connected:
             cls.html_content = cls.html_content.replace("Home CCTV (0/1)", "Home CCTV (1/1)")
-            cls.html_content = cls.html_content.replace("No Cameras detected!", "Camera 1: ")
-
+            cls.html_content = cls.html_content.replace("No Cameras detected!", "Camera 1: <iframe src=\"{addr}:5000/>")
         else:
             cls.html_content = cls.html_content.replace("Home CCTV (1/1)", "Home CCTV (0/1)")
             cls.html_content = cls.html_content.replace("Camera 1: ", "No Cameras detected!")
+
+    @classmethod
+    def set_latest_frame(cls, frame):
+        cls.latest_frame = frame
+
+    @classmethod
+    def get_latest_frame(cls):
+        return cls.latest_frame
 
 def run_http_server():
     webServer = HTTPServer((hostname, webServerPort), httpServer)
@@ -62,11 +71,32 @@ def run_socket_server():
                 data = conn.recv(1024)
                 if not data:
                     break
-                # Update HTML content dynamically when the client connects
+                frame = np.frombuffer(data, dtype=np.uint8)
+                frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+                httpServer.set_latest_frame(frame)
             httpServer.connected = False  # Update the connection status
             httpServer.update_title(httpServer.connected)  # Update the title when disconnected
             print("Client disconnected.")
 
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+def gen_frames():  
+    while True:
+        success, frame = camera.read()  # read the camera frame
+        if not success:
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+            
 if arg == "server":
     print("Starting CCTV Server!")
     http_thread = threading.Thread(target=run_http_server)
@@ -75,7 +105,6 @@ if arg == "server":
     socket_thread.start()
     http_thread.join()
     socket_thread.join()
-
 
 elif arg == "client":
     print("Starting CCTV Client!")
@@ -92,15 +121,16 @@ elif arg == "client":
                 connected = True
                 print(f"Connected to {webServerHost}:{serverPort}")
                 while True:
-                    cap = cv2.VideoCapture(1)
-                    ret, frame = cap.read()
-                    while cap.isOpened():
-                        ret, frame = cap.read()
-                        s.sendall(frame)
-                    cap.release()
+                    app.run(debug=False)
+#                    while cap.isOpened():
+#                        ret, frame = cap.read()
+#                        if ret:
+#                            _, encoded_frame = cv2.imencode('.jpg', frame)
+#                            s.sendall(encoded_frame.tobytes())
+#                    cap.release()
                     pass        
 
         except ConnectionRefusedError:
             print(f"Failed to connect to {webServerHost}:{serverPort}.")
 else:
-    print("Invalid argument! Use 'server' or 'client' as an argument!")    
+    print("Invalid argument! Use 'server' or 'client' as an argument!")

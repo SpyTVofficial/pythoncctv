@@ -50,7 +50,7 @@ And enter the IP-Adress of the Server
 ## Todo
 
 - HTTP Login
-- Showing Video Stream on Webserver
+- ~~Showing Video Stream on Webserver~~
 - Saving Video Stream
 - Movement Detection
 

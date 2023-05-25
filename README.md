@@ -41,7 +41,7 @@ Start the Server
 
 Start the Client
 ```bash
-  py cctv client
+  py cctv.py client
 ``` 
 And enter the IP-Adress of the Server
 ```bash

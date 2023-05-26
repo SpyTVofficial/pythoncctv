@@ -76,10 +76,28 @@ def run_socket_server():
             httpServer.connected = False  # Update the connection status
             httpServer.update_title(httpServer.connected)  # Update the title when disconnected
             print("Client disconnected.")
+                # close the already opened camera
+            camera.release()
+            # close the already opened file
+            output.release()
+            # close the window and de-allocate any associated memory usage
+            cv2.destroyAllWindows()  
 
-def gen_frames():  
+def gen_frames():
+    #Capture video from webcam
+    #vid_capture = cv2.VideoCapture(0)
+    vid_cod = cv2.VideoWriter_fourcc(*'mp4v')
+    global output
+    output = cv2.VideoWriter("videos/cam_video.mp4", vid_cod, 20.0, (640,480))
     while True:
         success, frame = camera.read()  # read the camera frame
+         # Capture each frame of webcam videoss
+        # ret,frame = camera.read()
+        cv2.imshow("My cam video", frame)
+        output.write(frame)
+        # Close and break the loop after pressing "x" key
+        if cv2.waitKey(1) &0XFF == ord('x'):
+         break
         if not success:
             break
         else:
@@ -87,7 +105,7 @@ def gen_frames():
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
-            
+    
 if arg == "server":
     print("Starting CCTV Server!")
     http_thread = threading.Thread(target=run_http_server)
